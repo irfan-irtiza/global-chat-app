@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <title>IRFAN - Neural Elite Guard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Orbitron:wght@900&display=swap');
+        
+        /* NEURAL MOTION ENGINE */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.4s cubic-bezier(0.23, 1, 0.32, 1), 
+                        transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), 
+                        opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+                        filter 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* DIGITAL SCROLLBAR CUSTOMIZATION */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 132, 255, 0.3); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gradient); box-shadow: 0 0 10px rgba(0, 132, 255, 0.5); }
+        body.dark-mode ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+
+        :root { 
+            --primary: #0084ff; --bg: #f0f2f5; --card: #ffffff; --text-main: #000000; 
+            --gradient: linear-gradient(135deg, #0084ff 0%, #00d2ff 100%); 
+            --texture: none; --tex-size: auto; --tex-blend: normal;
+        }
+        
+        body.dark-mode { --bg: #010409; --card: #0d1117; --text-main: #ffffff; }
+        body.dark-mode .bg-white, body.dark-mode #settings-folder { background-color: var(--card) !important; color: var(--text-main) !important; }
+        body.dark-mode .bubble-them { background-color: #21262d !important; border: 1px solid #30363d; }
+        body.dark-mode .b-text { color: var(--text-main); }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); height: 100dvh; 
+            display: flex; align-items: center; justify-content: center; margin: 0; overflow: hidden; 
+            color: var(--text-main); width: 100vw;
+        }
+        
+        .app-container {
+            width: 100%; max-width: 450px; height: 100dvh; background: var(--card);
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .read-receipt { display: flex; align-items: center; margin-left: 4px; }
+        .tick-blue { color: #34b7f1; }
+
+        .msg-container { transform: translateY(10px); opacity: 0; animation: msg-slide 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes msg-slide { to { transform: translateY(0); opacity: 1; } }
+
+        .msg-blurred { filter: blur(12px) grayscale(1); opacity: 0.1; transform: scale(0.9); pointer-events: none; }
+        .msg-pop { transform: scale(1.04); z-index: 10; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); }
+        .highlight { background: #fbbf24; color: #000; padding: 0 3px; border-radius: 3px; font-weight: 800; }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(12px);
+            border-radius: 50px; font-size: 10px; font-weight: 800; height: 26px;
+        }
+        .pulse-dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; position: relative; }
+        .pulse-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: inherit; animation: pulse-ring 2s infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(0.7); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        #settings-folder { 
+            display: block; position: absolute; inset: 0; background: #0d1117; z-index: 2000; 
+            transform: translateY(100%); visibility: hidden; pointer-events: none; 
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s; color: white; width: 100%; height: 100%; 
+        }
+        #settings-folder.open { transform: translateY(0); visibility: visible; pointer-events: auto; }
+
+        .member-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .member-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+
+        emoji-picker { 
+            display: none; position: absolute; bottom: 85px; left: 10px; right: 10px; z-index: 1000; 
+            height: 350px; width: calc(100% - 20px); border-radius: 12px; opacity: 0; transform: translateY(20px);
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        emoji-picker.show { display: block; opacity: 1; transform: translateY(0); }
+
+        .constant-logo { font-family: 'Orbitron', sans-serif; letter-spacing: 4px; background: #ffffff; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .theme-dot { width: 34px; height: 34px; border-radius: 10px; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); background-size: cover !important; }
+        .theme-dot:hover { transform: scale(1.15); border-color: white; }
+
+        .bubble-me, .bubble-them { position: relative; margin-bottom: 12px; padding: 12px 14px 28px 14px; min-width: 100px; max-width: 85%; display: flex; flex-direction: column; }
+        .bubble-me { background: var(--gradient); background-image: var(--texture), var(--gradient); background-size: var(--tex-size), auto; background-blend-mode: var(--tex-blend); color: white; border-radius: 18px 18px 4px 18px; }
+        .bubble-them { background: #ffffff; color: #000000; border-radius: 4px 18px 18px 18px; }
+        
+        .b-text { font-size: 15px; font-weight: 700; line-height: 1.4; word-break: break-word; white-space: pre-wrap; }
+        .msg-meta { position: absolute; bottom: 6px; right: 12px; display: flex; align-items: center; gap: 4px; }
+        .time-text { font-size: 10px; font-weight: 900; opacity: 0.8; }
+        
+        .input-grey { background-color: #475569; border: 1px solid #334155; width: 100%; transition: all 0.3s; }
+        .input-grey:focus-within { border-color: var(--primary); transform: scale(1.01); box-shadow: 0 0 20px rgba(0,132,255,0.2); }
+        
+        .toggle-active { background-color: #0084ff !important; color: white !important; transform: scale(1.05); }
+        
+        #modal-overlay { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); 
+            z-index: 3000; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; 
+        }
+        #modal-overlay.show { display: flex; opacity: 1; }
+
+        .section-label { font-size: 10px; font-weight: 900; text-transform: uppercase; opacity: 0.4; margin-bottom: 8px; display: block; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <div id="modal-overlay">
+        <div class="bg-white p-8 rounded-[32px] max-w-sm w-full text-center transform scale-90 transition-transform duration-300" id="modal-box">
+            <h3 id="modal-title" class="text-xl font-black mb-2 text-black tracking-tight">Security Action</h3>
+            <p id="modal-desc" class="text-slate-500 font-semibold text-sm leading-relaxed"></p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="window.closeModal()" class="flex-1 py-3 font-bold bg-slate-100 rounded-2xl text-black uppercase text-[10px] hover:bg-slate-200">Cancel</button>
+                <button id="modal-confirm" class="flex-1 py-3 font-bold bg-red-600 rounded-2xl text-white uppercase text-[10px] hover:bg-red-700">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <div id="settings-folder" class="overflow-y-auto pb-20">
+            <div class="p-6 flex justify-between items-center border-b border-white/10 sticky top-0 bg-[#0d1117] z-10">
+                <h2 class="text-xl font-black text-white italic">CONTROL CENTER</h2>
+                <button onclick="window.toggleFolder()" class="bg-white/10 p-2 rounded-full text-white hover:rotate-90">✕</button>
+            </div>
+            
+            <div class="p-6 space-y-8">
+                <div class="flex flex-col gap-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <span class="section-label">Profile Identity</span>
+                    <div class="flex items-center gap-4">
+                        <input type="text" id="username-input" class="font-bold bg-transparent outline-none flex-1 text-white" placeholder="Change name...">
+                        <button onclick="window.saveName()" class="text-blue-400 font-black text-xs uppercase hover:tracking-widest transition-all">Update</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <span class="section-label">Neural Directory (Active People)</span>
+                    <div id="active-members-list" class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <span class="section-label">1. Select Core Color</span>
+                        <div class="grid grid-cols-5 gap-3">
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #0084ff, #00d2ff)" onclick="window.updateCustom('color', 'default')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #f59e0b, #92400e)" onclick="window.updateCustom('color', 'amber')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #ef4444, #7f1d1d)" onclick="window.updateCustom('color', 'crimson')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #10b981, #064e3b)" onclick="window.updateCustom('color', 'emerald')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #8b5cf6, #4c1d95)" onclick="window.updateCustom('color', 'violet')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #ec4899, #831843)" onclick="window.updateCustom('color', 'rose')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #444, #000)" onclick="window.updateCustom('color', 'carbon')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #0ea5e9, #0369a1)" onclick="window.updateCustom('color', 'sky')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #f97316, #9a3412)" onclick="window.updateCustom('color', 'orange')"></div>
+                            <div class="theme-dot" style="background: linear-gradient(135deg, #ffffff, #94a3b8)" onclick="window.updateCustom('color', 'snow')"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="section-label">2. Apply Neural Texture</span>
+                        <div class="grid grid-cols-5 gap-3">
+                            <div class="theme-dot border-white/40 flex items-center justify-center text-[8px] font-black" onclick="window.updateCustom('tex', 'none')">NONE</div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');" onclick="window.updateCustom('tex', 'carbon')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/cubes.png');" onclick="window.updateCustom('tex', 'cubes')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/diagmonds-light.png');" onclick="window.updateCustom('tex', 'diamonds')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/stardust.png');" onclick="window.updateCustom('tex', 'dust')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/sandpaper.png');" onclick="window.updateCustom('tex', 'sand')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/grid-me.png');" onclick="window.updateCustom('tex', 'grid')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/circuit-board.png');" onclick="window.updateCustom('tex', 'circuit')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/polyester.png');" onclick="window.updateCustom('tex', 'fiber')"></div>
+                            <div class="theme-dot" style="background: #333; background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');" onclick="window.updateCustom('tex', 'noise')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex bg-white/10 p-1 rounded-2xl">
+                    <button onclick="window.toggleDarkMode(false)" id="btn-light" class="flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all">Light</button>
+                    <button onclick="window.toggleDarkMode(true)" id="btn-dark" class="flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all">Dark</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 text-white shrink-0" id="header-main" style="background: var(--gradient); background-image: var(--texture), var(--gradient); background-size: var(--tex-size), auto; background-blend-mode: var(--tex-blend);">
+            <div class="flex justify-between items-start">
+                <div class="flex-1 min-w-0">
+                    <h1 class="constant-logo text-2xl font-black italic">IRFAN</h1>
+                    <div id="status-container" class="mt-1 flex items-center h-[30px]">
+                        <div id="status-badge" class="status-pill">
+                            <div class="pulse-dot"></div><span class="truncate">ONLINE</span>
+                        </div>
+                    </div>
+                    <span id="room-display" class="text-[9px] font-bold opacity-70 bg-black/20 px-2 rounded uppercase mt-1 inline-block">Room: Common</span>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <span id="online-count" class="bg-white/20 px-3 py-1 rounded-full text-[9px] font-black">0 ACTIVE</span>
+                    <button onclick="window.changeRoom()" class="text-[9px] font-black opacity-80 uppercase hover:text-white transition-colors">Switch</button>
+                    <button onclick="window.triggerLocalClear()" class="text-[9px] font-black text-red-100 uppercase hover:text-red-400 transition-colors">Clear Device</button>
+                </div>
+            </div>
+            <div class="mt-5 flex items-center bg-white/20 rounded-xl px-4 py-2.5 backdrop-blur-md">
+                <input type="text" id="search-input" oninput="window.searchMessages()" placeholder="Search word..." class="bg-transparent border-none text-xs outline-none w-full text-white placeholder:text-white/60 font-bold">
+                <button onclick="window.toggleFolder()" class="shrink-0 hover:scale-110"><svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+        </div>
+
+        <div id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-2 scroll-smooth"></div>
+
+        <div class="bg-white border-t shrink-0 relative">
+            <emoji-picker id="picker"></emoji-picker>
+            <div class="p-4 bg-white">
+                <form onsubmit="window.send(event)" class="flex items-center gap-2 input-grey rounded-[24px] p-2 px-3">
+                    <button type="button" onclick="window.toggleEmoji()" class="text-2xl px-1">😊</button>
+                    <div class="flex items-center gap-2 border-l border-white/30 pl-2">
+                        <label class="cursor-pointer"><input type="file" class="hidden" onchange="window.img(event)"><svg class="w-5 h-5 text-white/80" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a4 4 0 00-5.656-5.656l-6.415 6.415a6 6 0 108.486 8.486L20.5 13" /></svg></label>
+                    </div>
+                    <input type="text" id="input" oninput="window.handleTyping()" class="flex-1 bg-transparent border-none text-[15px] font-bold outline-none text-white" placeholder="Type..." autocomplete="off">
+                    <button type="submit" id="send-btn" class="text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, setDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        const config = { apiKey: "AIzaSyDN5FVS2SCMH3C0m440KGKtAyttZCEKIA4", projectId: "my-first-chat-e6137", storageBucket: "my-first-chat-e6137.firebasestorage.app", appId: "1:284622815190:web:6547c331763db9b72a6e77" };
+        const app = initializeApp(config); const db = getFirestore(app);
+        
+        let room = new URLSearchParams(window.location.search).get('room') || 'common';
+        let user = localStorage.getItem('chat-username') || "User_" + Math.floor(Math.random()*999);
+        localStorage.setItem('chat-username', user);
+        
+        // NICKNAME SYSTEM
+        let nicknames = JSON.parse(localStorage.getItem('chat-nicknames') || '{}');
+        let isSending = false;
+
+        const clean = (s) => s?.replace(/[&<>"']/g, m => ({'&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'}[m])) || '';
+
+        // MODAL SYSTEM
+        window.openModal = (title, desc, confirmAction) => {
+            const overlay = document.getElementById('modal-overlay');
+            const box = document.getElementById('modal-box');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            overlay.classList.add('show');
+            setTimeout(() => box.style.transform = 'scale(1)', 10);
+            document.getElementById('modal-confirm').onclick = () => { confirmAction(); window.closeModal(); };
+        };
+
+        window.closeModal = () => {
+            const overlay = document.getElementById('modal-overlay');
+            const box = document.getElementById('modal-box');
+            box.style.transform = 'scale(0.9)';
+            overlay.classList.remove('show');
+        };
+
+        window.triggerLocalClear = () => {
+            window.openModal("Clear Device History", "Wipe all messages locally?", () => { localStorage.setItem(`deleted_at_${room}`, Date.now()); location.reload(); });
+        };
+
+        window.processPurgeCommand = () => {
+            const pass = prompt("Admin Key:");
+            if(pass === "1234") {
+                window.openModal("Global Purge", "Delete everything for everyone?", async () => {
+                    const q = query(collection(db, "messages"), where("room", "==", room));
+                    const snap = await getDocs(q);
+                    const batch = writeBatch(db);
+                    snap.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                });
+            }
+        };
+
+        window.searchMessages = () => {
+            const q = document.getElementById('search-input').value.toLowerCase().trim();
+            const containers = document.querySelectorAll('.msg-container');
+            containers.forEach(container => {
+                const textEl = container.querySelector('.b-text');
+                const raw = textEl ? textEl.getAttribute('data-raw') || textEl.textContent : "";
+                if (q === "") { container.classList.remove('msg-blurred', 'msg-pop'); if (textEl) textEl.innerHTML = clean(raw); return; }
+                if (raw.toLowerCase().includes(q)) {
+                    container.classList.remove('msg-blurred'); container.classList.add('msg-pop');
+                    if (textEl) {
+                        if (!textEl.getAttribute('data-raw')) textEl.setAttribute('data-raw', raw);
+                        const regex = new RegExp(`(${q})`, "gi");
+                        textEl.innerHTML = clean(raw).replace(regex, '<span class="highlight">$1</span>');
+                    }
+                } else { container.classList.add('msg-blurred'); container.classList.remove('msg-pop'); }
+            });
+        };
+
+        const setupUser = async () => { 
+            await setDoc(doc(db, "presence", user), { room, online: true, lastSeen: Date.now(), username: user }); 
+        };
+        setupUser();
+
+        // NEURAL DIRECTORY LOGIC
+        window.setNickname = (originalUser) => {
+            const nick = prompt(`Set local nickname for ${originalUser}:`, nicknames[originalUser] || "");
+            if (nick !== null) {
+                if (nick.trim() === "") {
+                    delete nicknames[originalUser];
+                } else {
+                    nicknames[originalUser] = nick.trim();
+                }
+                localStorage.setItem('chat-nicknames', JSON.stringify(nicknames));
+                location.reload(); // Refresh to apply throughout
+            }
+        };
+
+        onSnapshot(query(collection(db, "presence"), where("room", "==", room), where("online", "==", true)), s => { 
+            document.getElementById('online-count').innerText = `${s.size} ACTIVE`;
+            const listContainer = document.getElementById('active-members-list');
+            listContainer.innerHTML = '';
+            
+            s.forEach(doc => {
+                const member = doc.id;
+                const display = nicknames[member] ? `${nicknames[member]} (@${member})` : member;
+                const div = document.createElement('div');
+                div.className = 'member-item';
+                div.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-white">${clean(display)}</span>
+                        <span class="text-[8px] opacity-50 uppercase">${member === user ? 'You' : 'Active'}</span>
+                    </div>
+                    <button onclick="window.setNickname('${member}')" class="text-[9px] font-black bg-white/10 px-2 py-1 rounded hover:bg-white/20 transition-all uppercase">Set Nick</button>
+                `;
+                listContainer.appendChild(div);
+            });
+        });
+
+        onSnapshot(query(collection(db, "typing"), where("room", "==", room), where("isTyping", "==", true)), s => { 
+            const active = s.docs.filter(d => d.id !== user && (Date.now() - d.data().lastUpdated < 5000)); 
+            const badge = document.getElementById('status-badge');
+            if (active.length > 0) {
+                badge.style.background = "rgba(59, 130, 246, 0.45)";
+                badge.innerHTML = `<span class="truncate">Someone is typing...</span>`;
+            } else {
+                badge.style.background = "rgba(255, 255, 255, 0.18)";
+                badge.innerHTML = `<div class="pulse-dot"></div><span>ONLINE</span>`;
+            }
+        });
+
+        window.toggleEmoji = () => document.getElementById('picker').classList.toggle('show');
+        document.getElementById('picker').addEventListener('emoji-click', e => { document.getElementById('input').value += e.detail.unicode; window.handleTyping(); });
+        window.toggleFolder = () => document.getElementById('settings-folder').classList.toggle('open');
+
+        const colors = {
+            default: 'linear-gradient(135deg, #0084ff, #00d2ff)',
+            amber: 'linear-gradient(135deg, #f59e0b, #92400e)',
+            crimson: 'linear-gradient(135deg, #ef4444, #7f1d1d)',
+            emerald: 'linear-gradient(135deg, #10b981, #064e3b)',
+            violet: 'linear-gradient(135deg, #8b5cf6, #4c1d95)',
+            rose: 'linear-gradient(135deg, #ec4899, #831843)',
+            carbon: 'linear-gradient(135deg, #444, #000)',
+            sky: 'linear-gradient(135deg, #0ea5e9, #0369a1)',
+            orange: 'linear-gradient(135deg, #f97316, #9a3412)',
+            snow: 'linear-gradient(135deg, #f1f5f9, #94a3b8)'
+        };
+
+        const textures = {
+            none: { url: 'none', blend: 'normal' },
+            carbon: { url: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')", blend: 'soft-light' },
+            cubes: { url: "url('https://www.transparenttextures.com/patterns/cubes.png')", blend: 'overlay' },
+            diamonds: { url: "url('https://www.transparenttextures.com/patterns/diagmonds-light.png')", blend: 'overlay' },
+            dust: { url: "url('https://www.transparenttextures.com/patterns/stardust.png')", blend: 'screen' },
+            sand: { url: "url('https://www.transparenttextures.com/patterns/sandpaper.png')", blend: 'multiply' },
+            grid: { url: "url('https://www.transparenttextures.com/patterns/grid-me.png')", blend: 'overlay' },
+            circuit: { url: "url('https://www.transparenttextures.com/patterns/circuit-board.png')", blend: 'overlay' },
+            fiber: { url: "url('https://www.transparenttextures.com/patterns/polyester.png')", blend: 'soft-light' },
+            noise: { url: "url('https://www.transparenttextures.com/patterns/asfalt-dark.png')", blend: 'soft-light' }
+        };
+
+        window.updateCustom = (type, value) => {
+            let config = JSON.parse(localStorage.getItem('theme-config') || '{"color":"default","tex":"none"}');
+            config[type] = value;
+            localStorage.setItem('theme-config', JSON.stringify(config));
+            
+            const grad = colors[config.color];
+            const tex = textures[config.tex];
+            
+            document.documentElement.style.setProperty('--gradient', grad);
+            document.documentElement.style.setProperty('--texture', tex.url);
+            document.documentElement.style.setProperty('--tex-blend', tex.blend);
+        };
+
+        window.toggleDarkMode = (isDark) => { 
+            document.body.classList.toggle('dark-mode', isDark); 
+            localStorage.setItem('dark-mode', isDark);
+            const base = 'flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all';
+            document.getElementById('btn-dark').className = isDark ? base + ' toggle-active' : base;
+            document.getElementById('btn-light').className = !isDark ? base + ' toggle-active' : base;
+        };
+
+        window.saveName = async () => {
+            const newName = clean(document.getElementById('username-input').value.trim());
+            if(newName.length > 1) { localStorage.setItem('chat-username', newName); location.reload(); }
+        };
+        
+        window.handleTyping = async () => { 
+            await setDoc(doc(db, "typing", user), { isTyping: true, room: room, lastUpdated: Date.now() }); 
+            clearTimeout(window.tT); 
+            window.tT = setTimeout(() => setDoc(doc(db, "typing", user), { isTyping: false, room, lastUpdated: Date.now() }), 3000); 
+        };
+
+        window.send = async (e) => { 
+            e.preventDefault(); if(isSending) return;
+            const inputEl = document.getElementById('input');
+            const v = inputEl.value.trim(); 
+            if(!v) return; 
+            if(v.toLowerCase() === '/purge') { inputEl.value = ''; window.processPurgeCommand(); return; }
+            isSending = true; inputEl.value = ''; 
+            document.getElementById('picker').classList.remove('show');
+            try { await addDoc(collection(db, "messages"), { room, sender: user, text: v, createdAt: serverTimestamp() }); } finally { isSending = false; }
+        };
+
+        window.img = (e) => { 
+            const f = e.target.files[0]; if(!f || f.size > 1048576) return;
+            const r = new FileReader(); r.onload = async (ev) => await addDoc(collection(db, "messages"), { room, sender: user, image: ev.target.result, createdAt: serverTimestamp() }); 
+            r.readAsDataURL(f); 
+        };
+
+        const cutoff = parseInt(localStorage.getItem(`deleted_at_${room}`)) || 0;
+        onSnapshot(query(collection(db, "messages"), where("room", "==", room), orderBy("createdAt", "asc")), snap => {
+            const win = document.getElementById('chat-window'); const frag = document.createDocumentFragment();
+            snap.forEach(d => {
+                const m = d.data(); if ((m.createdAt?.toMillis() || Date.now()) <= cutoff) return;
+                const isMe = m.sender === user; const wrap = document.createElement('div');
+                wrap.className = `msg-container flex flex-col ${isMe ? 'items-end' : 'items-start'} w-full`;
+                const ticks = isMe ? `<span class="read-receipt"><svg class="w-3 h-3 tick-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7m-12 10l4 4L21 11"/></svg></span>` : '';
+                
+                // Display logic using nickname
+                const senderDisplay = nicknames[m.sender] || m.sender;
+
+                wrap.innerHTML = `<span class="text-[10px] font-bold text-slate-500 mb-1 px-2 uppercase">${clean(senderDisplay)}</span>
+                    <div class="b-box ${isMe ? 'bubble-me' : 'bubble-them'}">
+                        ${m.image ? `<img src="${m.image}" class="rounded-lg mb-1">` : `<p class="b-text" data-raw="${m.text}">${clean(m.text)}</p>`}
+                        <div class="msg-meta"><span class="time-text">${m.createdAt ? new Date(m.createdAt.toMillis()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</span>${ticks}</div>
+                    </div>`;
+                frag.appendChild(wrap);
+            });
+            win.innerHTML = ''; win.appendChild(frag); win.scrollTop = win.scrollHeight; window.searchMessages();
+        });
+
+        window.changeRoom = () => { const r = prompt("Room Name:", room); if(r) window.location.search = `?room=${r.toLowerCase()}`; };
+        window.toggleDarkMode(localStorage.getItem('dark-mode') === 'true');
+        
+        const savedTheme = JSON.parse(localStorage.getItem('theme-config') || '{"color":"default","tex":"none"}');
+        window.updateCustom('color', savedTheme.color);
+        window.updateCustom('tex', savedTheme.tex);
+        
+        document.getElementById('room-display').innerText = `Room: ${room}`;
+    </script>
+</body>
+</html>
